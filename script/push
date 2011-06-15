@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+#
+# Send a single push notification
+#
+#   $ script/push <TOKEN> "<ALERT>"
+#
+
+require "rubygems"
+require "bundler/setup"
+require "em-apn"
+
+ENV["APN_KEY"]  ||= File.join(File.dirname(__FILE__),  "..", "certs", "key.pem")
+ENV["APN_CERT"] ||= File.join(File.dirname(__FILE__), "..", "certs", "cert.pem")
+
+token, alert = ARGV
+
+if token.nil? || alert.nil?
+  puts "Usage: script/push <TOKEN> \"<ALERT>\""
+  exit 1
+end
+
+EM.run do
+  client = EM.connect("gateway.sandbox.push.apple.com", 2195, EM::APN::Client)
+  client.on_receipt { |_| EM.stop_event_loop }
+  client.deliver(token, :alert => alert)
+
+  # Hopefully give ourselves enough time to receive a response on failure.
+  # Wish there was a better way to do this. Or at least a more timely way.
+  EM.add_timer(1) { EM.stop_event_loop }
+end

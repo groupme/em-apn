@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- mode: ruby; encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
 require "em-apn/version"
 
@@ -19,4 +19,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency "eventmachine", ">= 1.0.0.beta.3"
+
+  s.add_development_dependency "rspec", "~> 2.6.0"
 end

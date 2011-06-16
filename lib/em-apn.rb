@@ -5,15 +5,14 @@ require "logger"
 module EventMachine
   module APN
     module Client
-      def deliver(token, notification = {})
-        payload = {:aps => notification}
-        payload_json = payload.to_json
-        logger.info("SEND #{token} #{payload_json}")
+      def deliver(token, options = {})
+        raise "Bad push token: #{token}" if token.nil? || (token.length != 64)
 
-        data_array = [1, 66, 0, 32, token, payload_json.length, payload_json]
-        data = data_array.pack("cNNnH*na*")
+        payload = extract_payload(options)
+        data    = enhanced_packet(token, payload, options)
 
-        send_data data
+        logger.info("SEND #{token} #{payload}")
+        send_data(data)
       end
 
       def on_receipt(&block)
@@ -42,6 +41,18 @@ module EventMachine
       end
 
       private
+
+      def extract_payload(options)
+        payload = {:aps => options}
+        payload.to_json
+      end
+
+      # Documentation about this format is here:
+      # http://developer.apple.com/library/ios/#documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingWIthAPS/CommunicatingWIthAPS.html
+      def enhanced_packet(token, payload, options)
+        data_array = [1, 66, 0, 32, token, payload.length, payload]
+        data_array.pack("cNNnH*na*")
+      end
 
       def logger
         @logger ||= Logger.new(STDOUT)

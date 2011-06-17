@@ -2,8 +2,7 @@ require "spec_helper"
 
 describe EventMachine::APN::Client do
   describe "#deliver" do
-    let(:token)   { "fe9515ba7556cfdcfca6530235c95dff682fac765838e749a201a7f6cf3792e6" }
-    let(:payload) { JSON.parse(@delivered.last) }
+    let(:token) { "fe9515ba7556cfdcfca6530235c95dff682fac765838e749a201a7f6cf3792e6" }
 
     before do
       klass = Class.new
@@ -17,84 +16,11 @@ describe EventMachine::APN::Client do
       end
     end
 
-    context "push token" do
-      it "sends the notification to the given token" do
-        @client.deliver(token)
-        @delivered[4].should == token
-      end
-
-      it "raises an exception if the token is blank" do
-        expect { @client.deliver(nil) }.to raise_error
-        expect { @client.deliver("") }.to raise_error
-      end
-
-      it "raises an exception if the token is less than or greater than 32 bytes" do
-        expect { @client.deliver("0" * 63) }.to raise_error
-        expect { @client.deliver("0" * 65) }.to raise_error
-      end
-    end
-
-    context "payload" do
-      context "aps" do
-        it "supports the :alert property as a string" do
-          @client.deliver(token, :alert => "Hello world")
-          payload["aps"]["alert"].should == "Hello world"
-        end
-
-        it "supports the :alert property as a hash" do
-          @client.deliver(token, :alert => {:"loc-key" => "LOCALIZED", :"loc-args" => ["James", "Brown"]})
-          payload["aps"]["alert"].should == {"loc-key" => "LOCALIZED", "loc-args" => ["James", "Brown"]}
-        end
-
-        it "supports the :badge property" do
-          @client.deliver(token, :badge => 10)
-          payload["aps"]["badge"].should == 10
-        end
-
-        it "supports the :sound property" do
-          @client.deliver(token, :sound => "ding.aiff")
-          payload["aps"]["sound"].should == "ding.aiff"
-        end
-
-        it "supports string keys -- 'alert'" do
-          @client.deliver(token, "alert" => "Hello world")
-          payload["aps"]["alert"].should == "Hello world"
-        end
-      end
-
-      context "custom" do
-        it "adds any other options as properties outside of the aps property" do
-          @client.deliver(token, :line => "I'm super bad")
-          payload["line"].should == "I'm super bad"
-        end
-      end
-    end
-
-    context "other options" do
-      context "expiry" do
-        it "supports setting the notification expiry as an epoch timestamp" do
-          epoch = Time.now.to_i
-          @client.deliver(token, {}, {:expiry => epoch})
-          @delivered[2].should == epoch
-        end
-
-        it "defaults the expiry to zero (which indicates that the notification should not be stored)" do
-          @client.deliver(token, {}, {})
-          @delivered[2].should == 0
-        end
-      end
-
-      context "identifier" do
-        it "supports setting the identifier" do
-          @client.deliver(token, {}, {:identifier => 12345})
-          @delivered[1].should == 12345
-        end
-
-        it "defaults the identifier to zero" do
-          @client.deliver(token, {}, {})
-          @delivered[1].should == 0
-        end
-      end
+    it "sends a Notification object" do
+      notification = EM::APN::Notification.new(token, :alert => "Hello world")
+      @client.deliver(notification)
+      @delivered[4].should == token
+      @delivered[6].should == {:aps => {:alert => "Hello world"}}.to_json
     end
   end
 end

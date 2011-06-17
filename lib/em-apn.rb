@@ -43,7 +43,12 @@ module EventMachine
       private
 
       def extract_payload(options)
-        payload = {:aps => options}
+        aps = {}
+        aps[:alert] = options.delete(:alert) || options.delete("alert")
+        aps[:badge] = options.delete(:badge) || options.delete("badge")
+        aps[:sound] = options.delete(:sound) || options.delete("sound")
+
+        payload = options.merge(:aps => aps)
         payload.to_json
       end
 

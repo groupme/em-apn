@@ -2,6 +2,9 @@ require "spec_helper"
 
 describe EventMachine::APN::Client do
   describe "#deliver" do
+    let(:token)   { "fe9515ba7556cfdcfca6530235c95dff682fac765838e749a201a7f6cf3792e6" }
+    let(:payload) { JSON.parse(@delivered.last) }
+
     before do
       klass = Class.new
       klass.send(:include, EventMachine::APN::Client)
@@ -16,7 +19,6 @@ describe EventMachine::APN::Client do
 
     context "push token" do
       it "sends the notification to the given token" do
-        token = "fe9515ba7556cfdcfca6530235c95dff682fac765838e749a201a7f6cf3792e6"
         @client.deliver(token)
         @delivered[4].should == token
       end
@@ -33,9 +35,6 @@ describe EventMachine::APN::Client do
     end
 
     context "payload" do
-      let(:token)   { "fe9515ba7556cfdcfca6530235c95dff682fac765838e749a201a7f6cf3792e6" }
-      let(:payload) { JSON.parse(@delivered.last) }
-
       context "aps" do
         it "supports the :alert property as a string" do
           @client.deliver(token, :alert => "Hello world")
@@ -72,6 +71,30 @@ describe EventMachine::APN::Client do
     end
 
     context "other options" do
+      context "expiry" do
+        it "supports setting the notification expiry as an epoch timestamp" do
+          epoch = Time.now.to_i
+          @client.deliver(token, {}, {:expiry => epoch})
+          @delivered[2].should == epoch
+        end
+
+        it "defaults the expiry to zero (which indicates that the notification should not be stored)" do
+          @client.deliver(token, {}, {})
+          @delivered[2].should == 0
+        end
+      end
+
+      context "identifier" do
+        it "supports setting the identifier" do
+          @client.deliver(token, {}, {:identifier => 12345})
+          @delivered[1].should == 12345
+        end
+
+        it "defaults the identifier to zero" do
+          @client.deliver(token, {}, {})
+          @delivered[1].should == 0
+        end
+      end
     end
   end
 end

@@ -5,9 +5,9 @@ We want:
  * Streamlined for a persistent connection use-case
  * Support for the enhanced protocol, with receipts
 
-Maybe:
+## TODO ##
 
- * Somehow support the feedback API for dead tokens
+ * Support the feedback API for dead tokens
 
 ## Inspiration ##
 

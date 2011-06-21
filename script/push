@@ -20,9 +20,7 @@ if token.nil? || alert.nil?
 end
 
 EM.run do
-  client = EM.connect("gateway.sandbox.push.apple.com", 2195, EM::APN::Client)
-  client.on_receipt { |_| EM.stop_event_loop }
-  client.deliver EM::APN::Notification.new(token, :alert => alert)
+  EM::APN.push(token, :alert => alert)
 
   # Hopefully give ourselves enough time to receive a response on failure.
   # Wish there was a better way to do this. Or at least a more timely way.

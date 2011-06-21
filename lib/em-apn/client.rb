@@ -1,6 +1,12 @@
 module EventMachine
   module APN
     class Client < EventMachine::Connection
+      def self.setup(options = {})
+        gateway = options.delete(:gateway)
+        gateway ||= (ENV["APN_ENV"] == "production") ? "gateway.push.apple.com" : "gateway.sandbox.push.apple.com"
+        EM.connect(gateway, 2195, self, options)
+      end
+
       def initialize(options = {})
         @key  = options[:key]  || ENV["APN_KEY"]
         @cert = options[:cert] || ENV["APN_CERT"]

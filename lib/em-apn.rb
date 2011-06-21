@@ -6,6 +6,17 @@ require "em-apn/notification"
 
 module EventMachine
   module APN
+    def self.push(token, aps = {}, custom = {}, options = {})
+      notification = Notification.new(token, aps, custom, options)
+
+      @client ||= Client.setup
+      @client.deliver(notification)
+    end
+
+    def self.client=(new_client)
+      @client = new_client
+    end
+
     def self.logger
       @logger ||= Logger.new(STDOUT)
     end

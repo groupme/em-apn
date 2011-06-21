@@ -9,6 +9,33 @@ describe EventMachine::APN::Client do
     client
   end
 
+  describe ".setup" do
+    let(:client) { double(EventMachine::APN::Client) }
+
+    it "takes care of setting up the EM::Connection for you" do
+      EM.should_receive(:connect).with("gateway.sandbox.push.apple.com", 2195, EventMachine::APN::Client, {}).and_return(client)
+      EM::APN::Client.setup.should == client
+    end
+
+    it "sets the gateway explicitly if :gateway is passed" do
+      EM.should_receive(:connect).with("some.crazy.gateway", 2195, EventMachine::APN::Client, {}).and_return(client)
+      EM::APN::Client.setup(:gateway => "some.crazy.gateway").should == client
+    end
+
+    it "sets the gateway to the production gateway if APN_ENV is set to production" do
+      ENV["APN_ENV"] = "production"
+      EM.should_receive(:connect).with("gateway.push.apple.com", 2195, EventMachine::APN::Client, {}).and_return(client)
+      EM::APN::Client.setup.should == client
+      ENV["APN_ENV"] = nil
+    end
+
+    it "passes key and cert options along as well" do
+      certs = {:key => "key", :cert => "cert"}
+      EM.should_receive(:connect).with("gateway.sandbox.push.apple.com", 2195, EventMachine::APN::Client, certs).and_return(client)
+      EM::APN::Client.setup(certs).should == client
+    end
+  end
+
   describe "#initialize" do
     it "accepts the key and cert as arguments" do
       EM::APN::Client.any_instance.should_receive(:start_tls).with(

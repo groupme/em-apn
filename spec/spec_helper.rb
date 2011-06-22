@@ -1,6 +1,6 @@
 require "rubygems"
 require "bundler/setup"
-Bundler.require
+Bundler.require :default, :development
 
 require "em-apn/test_helper"
 

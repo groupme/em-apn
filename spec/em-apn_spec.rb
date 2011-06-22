@@ -25,7 +25,7 @@ describe EventMachine::APN do
 
       expect {
         EM.run_block do
-          client = EM::APN::Client.setup
+          client = EM::APN::Client.connect
           EM.should_receive(:connect).once.and_return(client)
 
           EM::APN.push(token, :alert => "Hello world")

@@ -31,7 +31,7 @@ module EventMachine
 
       def build_payload
         payload = @custom.merge(:aps => @aps)
-        payload.to_json
+        Yajl::Encoder.encode(payload)
       end
 
       # Documentation about this format is here:

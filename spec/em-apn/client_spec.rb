@@ -103,7 +103,7 @@ describe EventMachine::APN::Client do
       end
 
       delivered[4].should == token
-      delivered[6].should == {:aps => {:alert => "Hello world"}}.to_json
+      delivered[6].should == Yajl::Encoder.encode({:aps => {:alert => "Hello world"}})
     end
   end
 end

@@ -1,5 +1,5 @@
 require "eventmachine"
-require "json"
+require "yajl"
 require "logger"
 require "em-apn/client"
 require "em-apn/notification"

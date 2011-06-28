@@ -20,13 +20,32 @@ describe EventMachine::APN do
       notification.payload.should == Yajl::Encoder.encode({:aps => {:alert => "Hello world"}})
     end
 
-    it "only ever instantiates a single, persistent APN connection" do
+    it "instantiates a single, persistent APN connection" do
       EM::APN.client = nil
 
       expect {
         EM.run_block do
           client = EM::APN::Client.connect
           EM.should_receive(:connect).once.and_return(client)
+
+          EM::APN.push(token, :alert => "Hello world")
+          EM::APN.push(token, :alert => "Hello world")
+          EM::APN.push(token, :alert => "Hello world")
+        end
+      }.to change { EM::APN.deliveries.size }.by(3)
+    end
+
+    it "re-connects if a connection closes" do
+      EM::APN.client = nil
+
+      expect {
+        EM.run_block do
+          client_1 = EM::APN::Client.connect
+          client_1.should_receive(:closed?).and_return(true)
+          client_2 = EM::APN::Client.connect
+
+          EM.should_receive(:connect).ordered.and_return(client_1)
+          EM.should_receive(:connect).ordered.and_return(client_2)
 
           EM::APN.push(token, :alert => "Hello world")
           EM::APN.push(token, :alert => "Hello world")

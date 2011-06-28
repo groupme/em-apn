@@ -9,7 +9,7 @@ module EventMachine
     def self.push(token, aps = {}, custom = {}, options = {})
       notification = Notification.new(token, aps, custom, options)
 
-      @client ||= Client.connect
+      @client = Client.connect if @client.nil? || @client.closed?
       @client.deliver(notification)
     end
 

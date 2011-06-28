@@ -15,28 +15,27 @@ A simple interface is provided to just fire and forget:
       EM::APN.push(token, :alert => "Hello world")
     end
 
-Using this interface, you need to set some environment variables so that EM::APN
-can find your SSL certificates:
+Using this interface, the easiest way to configure the connection is by setting
+some environment variables so that EM::APN can find your SSL certificates:
 
     ENV["APN_KEY"]  = "/path/to/key.pem"
     ENV["APN_CERT"] = "/path/to/cert.pem"
 
-Also, by default, the library connects to Apple's sandbox push server. If you want
-to connect to the production server, simply set the `APN_ENV` environment variable
-to `production`:
+Also, by default, the library connects to Apple's sandbox push server. If you
+want to connect to the production server, simply set the `APN_ENV`
+environment variable to `production`:
 
     ENV["APN_ENV"] = "production"
 
-And yes, it's environment variable heavy since this is originally destined for
-Heroku. The simple interface takes care of setting up and re-using a single,
-persistent connection to Apple's servers, but doesn't give you a way to setup
-callbacks for any replies. For that level of control, use the EM::APN::Client
-class directly.
+This simple interface takes care of setting up and re-using a single,
+persistent connection to Apple's servers, and re-connects on demand if the
+connection is dropped.
+
+It's also possible to create a connection manually, and currently, this is
+the only option if you want to attach a callback for data returned by Apple:
 
     EM.run do
       @client = EM::APN::Client.connect(
-        :host => "gateway.push.apple.com",
-        :port => 2195,
         :key  => "/path/to/key.pem",
         :cert => "/path/to/cert.pem"
       )
@@ -49,22 +48,15 @@ class directly.
       @client.deliver(notification)
     end
 
-In this example, we're explicitly setting the host, port, key, and cert with
-options to `APN::Client.connect`, but the environment variables mentioned above will
-work as well.
-
-## Caveats ##
-
-Currently, if the connection goes down, any deliveries that are attempted will
-be black-holed. The dropped connection will attempt to reconnect on an
-exponential decay, but keep this in mind. Future work will attempt to remedy
-this by returning some kind of error from `APN.push` and `APN::Client.deliver`,
-or queueing up failed deliveries for retry later.
+In this example, we're explicitly setting the key, and cert with options to
+`APN::Client.connect`, but the environment variables mentioned above will
+work as well. Please keep in mind that Apple will close the connection
+whenever an error is returned, and `APN::Client.closed?` should be polled to
+check for disconnects.
 
 ## TODO ##
 
  * Support the feedback API for dead tokens
- * Handle deliveries when the connection goes down
 
 ## Inspiration ##
 

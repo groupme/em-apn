@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+#
+# Run a mock Apple push server
+
+require "rubygems"
+require "bundler/setup"
+require "em-apn"
+require "em-apn/server"
+
+ENV["APN_KEY"]  = File.join(File.dirname(__FILE__), "certs", "key.pem")
+ENV["APN_CERT"] = File.join(File.dirname(__FILE__), "certs", "cert.pem")
+
+EM::APN.logger.info("Starting push server")
+
+EM.run do
+  EM.start_server("127.0.0.1", 2195, EM::APN::Server)
+end

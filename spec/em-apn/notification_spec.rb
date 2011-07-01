@@ -40,6 +40,24 @@ describe EventMachine::APN::Notification do
       payload = Yajl::Parser.parse(notification.payload)
       payload["line"].should == "I'm super bad"
     end
+
+    it "handles string keys" do
+      notification = EM::APN::Notification.new(token,
+        {
+          "alert" => "Hello world",
+          "badge" => 10,
+          "sound" => "ding.aiff"
+        },
+        {
+          "custom" => "param"
+        }
+      )
+      payload = Yajl::Parser.parse(notification.payload)
+      payload["aps"]["alert"].should == "Hello world"
+      payload["aps"]["badge"].should == 10
+      payload["aps"]["sound"].should == "ding.aiff"
+      payload["custom"].should == "param"
+    end
   end
 
   describe "#data" do

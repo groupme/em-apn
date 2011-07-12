@@ -60,7 +60,7 @@ Apple enforces a limit of __256 bytes__ for the __entire payload__.
 
 We raise an `EM::APN::Notification::PayloadTooLarge` exception.
 
-How you truncate the message is up to you. Be especially careful when dealing with multi-byte payloads.
+How you truncate your payloads is up to you. Be especially careful when dealing with multi-byte data.
 
 ## TODO ##
 

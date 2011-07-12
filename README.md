@@ -54,6 +54,14 @@ work as well. Please keep in mind that Apple will close the connection
 whenever an error is returned, and `APN::Client.closed?` should be polled to
 check for disconnects.
 
+### Max Payload Size ###
+
+Apple enforces a limit of __256 bytes__ for the __entire payload__.
+
+We raise an `EM::APN::Notification::PayloadTooLarge` exception.
+
+How you truncate the message is up to you. Be especially careful when dealing with multi-byte payloads.
+
 ## TODO ##
 
  * Support the feedback API for dead tokens

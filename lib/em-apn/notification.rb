@@ -1,6 +1,9 @@
 module EventMachine
   module APN
     class Notification
+      PAYLOAD_MAX_BYTES = 256
+      class PayloadTooLarge < StandardError;end
+
       attr_reader :token
       attr_accessor :identifier, :expiry
 
@@ -41,7 +44,12 @@ module EventMachine
         expiry     = @expiry || 0
 
         data_array = [1, identifier, expiry, 32, token, payload.length, payload]
-        data_array.pack("cNNnH*na*")
+        data = data_array.pack("cNNnH*na*")
+        if data.size > PAYLOAD_MAX_BYTES
+          error = "max is #{PAYLOAD_MAX_BYTES} bytes (got #{data.size})"
+          raise PayloadTooLarge.new(error)
+        end
+        data
       end
     end
   end

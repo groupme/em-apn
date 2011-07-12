@@ -75,6 +75,14 @@ describe EventMachine::APN::Notification do
       data[1].should == 0 # Identifier
       data[2].should == 0 # Expiry
     end
+
+    it "raises PayloadTooLarge error if PAYLOAD_MAX_BYTES exceeded" do
+      notification = EM::APN::Notification.new(token, {:alert => "X" * 512})
+
+      lambda {
+        notification.data
+      }.should raise_error(EM::APN::Notification::PayloadTooLarge)
+    end
   end
 
   describe "#identifier=" do

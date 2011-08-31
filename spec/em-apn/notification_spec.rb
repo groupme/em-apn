@@ -29,7 +29,7 @@ describe EventMachine::APN::Notification do
         :badge => 10,
         :sound => "ding.aiff"
       })
-      payload = Yajl::Parser.parse(notification.payload)
+      payload = MultiJson.decode(notification.payload)
       payload["aps"]["alert"].should == "Hello world"
       payload["aps"]["badge"].should == 10
       payload["aps"]["sound"].should == "ding.aiff"
@@ -37,7 +37,7 @@ describe EventMachine::APN::Notification do
 
     it "returns custom properties as well" do
       notification = EM::APN::Notification.new(token, {}, {:line => "I'm super bad"})
-      payload = Yajl::Parser.parse(notification.payload)
+      payload = MultiJson.decode(notification.payload)
       payload["line"].should == "I'm super bad"
     end
 
@@ -52,7 +52,7 @@ describe EventMachine::APN::Notification do
           "custom" => "param"
         }
       )
-      payload = Yajl::Parser.parse(notification.payload)
+      payload = MultiJson.decode(notification.payload)
       payload["aps"]["alert"].should == "Hello world"
       payload["aps"]["badge"].should == 10
       payload["aps"]["sound"].should == "ding.aiff"

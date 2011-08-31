@@ -38,7 +38,7 @@ module EventMachine
         message = "APN RECV #{headers[4]} #{payload}"
         EM::APN.logger.info(message)
 
-        args = Yajl::Parser.parse(payload)
+        args = MultiJson.decode(payload)
 
         # If the alert is 'DISCONNECT', then we fake a bad payload by replying
         # with an error and disconnecting.

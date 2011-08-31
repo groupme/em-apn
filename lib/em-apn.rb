@@ -1,10 +1,10 @@
 require "eventmachine"
-require "yajl"
+require "multi_json"
 require "logger"
 require "em-apn/client"
 require "em-apn/notification"
 
-module EventMachine
+module EventMachineÏ
   module APN
     def self.push(token, aps = {}, custom = {}, options = {})
       notification = Notification.new(token, aps, custom, options)

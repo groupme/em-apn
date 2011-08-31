@@ -4,7 +4,7 @@ require "logger"
 require "em-apn/client"
 require "em-apn/notification"
 
-module EventMachineÏ
+module EventMachine
   module APN
     def self.push(token, aps = {}, custom = {}, options = {})
       notification = Notification.new(token, aps, custom, options)

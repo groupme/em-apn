@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require "eventmachine"
 require "yajl"
 require "logger"

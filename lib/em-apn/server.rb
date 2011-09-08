@@ -1,3 +1,4 @@
+# encoding: UTF-8
 # Mock Apple push server... because we love to test
 module EventMachine
   module APN

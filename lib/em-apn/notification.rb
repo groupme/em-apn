@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 module EventMachine
   module APN
     class Notification

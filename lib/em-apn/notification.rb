@@ -45,7 +45,8 @@ module EventMachine
         identifier = @identifier || 0
         expiry     = @expiry || 0
 
-        data_array = [1, identifier, expiry, 32, token, payload.length, payload]
+        size = [payload].pack("a*").size
+        data_array = [1, identifier, expiry, 32, token, size, payload]
         data = data_array.pack("cNNnH*na*")
         if data.size > PAYLOAD_MAX_BYTES
           error = "max is #{PAYLOAD_MAX_BYTES} bytes (got #{data.size})"

@@ -71,10 +71,11 @@ describe EventMachine::APN::Notification do
     end
 
     it "handles UTF-8 payloads" do
-      notification = EM::APN::Notification.new(token, {:alert => "✓ Please"})
+      string = "✓ Please"
+      notification = EM::APN::Notification.new(token, {:alert => string})
       data = notification.data.unpack("cNNnH64na*")
       data[4].should == token
-      data[5].should == notification.payload.length
+      data[5].should == [notification.payload].pack("a*").size
       data[6].force_encoding("UTF-8").should == notification.payload
     end
 

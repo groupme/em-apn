@@ -105,6 +105,21 @@ describe EventMachine::APN::Client do
       delivered[4].should == token
       delivered[6].should == Yajl::Encoder.encode({:aps => {:alert => "Hello world"}})
     end
+
+    it "logs a message" do
+      test_log = StringIO.new
+      EM::APN.logger = Logger.new(test_log)
+
+      notification = EM::APN::Notification.new(token, :alert => "Hello world")
+
+      EM.run_block do
+        client = EM::APN::Client.connect
+        client.deliver(notification)
+      end
+
+      test_log.rewind
+      test_log.read.should include("TOKEN=#{token}")
+    end
   end
 
   describe "#closed?" do
@@ -118,6 +133,21 @@ describe EventMachine::APN::Client do
       end
 
       client.should be_closed
+    end
+  end
+
+  describe "#receive_data" do
+    it "logs a message" do
+      test_log = StringIO.new
+      EM::APN.logger = Logger.new(test_log)
+
+      EM.run_block do
+        client = EM::APN::Client.connect
+        client.receive_data([8, 8, 0].pack("ccN"))
+      end
+
+      test_log.rewind
+      test_log.read.should include("CODE=8 ID=0 DESC=Invalid token")
     end
   end
 end

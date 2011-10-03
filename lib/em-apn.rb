@@ -5,6 +5,9 @@ require "yajl"
 require "logger"
 require "em-apn/client"
 require "em-apn/notification"
+require "em-apn/log_message"
+require "em-apn/response"
+require "em-apn/error_response"
 
 module EventMachine
   module APN

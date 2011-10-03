@@ -37,7 +37,7 @@ module EventMachine
       end
 
       def deliver(notification)
-        EM::APN.logger.info("APN SEND #{notification.token} #{notification.payload}")
+        LogMessage.new(Response.new(notification)).log
         send_data(notification.data)
       end
 
@@ -63,7 +63,7 @@ module EventMachine
 
       def receive_data(data)
         data_array = data.unpack("ccN")
-        EM::APN.logger.info("APN RECV #{data_array.inspect}")
+        LogMessage.new(ErrorResponse.new(*data_array)).log
 
         if @on_receipt_callback
           @on_receipt_callback.call(data_array)

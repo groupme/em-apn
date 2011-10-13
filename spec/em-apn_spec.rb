@@ -17,7 +17,7 @@ describe EventMachine::APN do
 
       notification = EM::APN.deliveries.first
       notification.token.should == token
-      notification.payload.should == Yajl::Encoder.encode({:aps => {:alert => "Hello world"}})
+      notification.payload.should == MultiJson.encode({:aps => {:alert => "Hello world"}})
     end
 
     it "instantiates a single, persistent APN connection" do

@@ -98,7 +98,7 @@ describe EventMachine::APN::Client do
       end
 
       delivered[4].should == token
-      delivered[6].should == Yajl::Encoder.encode({:aps => {:alert => "Hello world"}})
+      delivered[6].should == MultiJson.encode({:aps => {:alert => "Hello world"}})
     end
 
     it "logs a message" do

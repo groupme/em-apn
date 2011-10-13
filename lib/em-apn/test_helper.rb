@@ -32,10 +32,6 @@ module EventMachine
         alias :deliver_without_testing :deliver
         alias :deliver :deliver_with_testing
 
-        def connect
-          # Nope
-        end
-
         def send_data(data)
           # Nope
         end

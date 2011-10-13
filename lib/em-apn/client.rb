@@ -5,7 +5,7 @@ module EventMachine
     class Client < EventMachine::Connection
       SANDBOX_GATEWAY    = "gateway.sandbox.push.apple.com"
       PRODUCTION_GATEWAY = "gateway.push.apple.com"
-      PORT = 2195
+      PORT               = 2195
 
       # Create a connection to Apple's push notification gateway
       #
@@ -24,10 +24,6 @@ module EventMachine
         gateway ||= (ENV["APN_ENV"] == "production") ? PRODUCTION_GATEWAY : SANDBOX_GATEWAY
 
         EM.connect(gateway, PORT, self, options)
-      end
-
-      def self.gateway
-        (ENV["APN_ENV"] == "production") ? "gateway.push.apple.com" : "gateway.sandbox.push.apple.com"
       end
 
       def initialize(options = {})

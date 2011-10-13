@@ -24,6 +24,10 @@ describe EventMachine::APN::Client do
     end
 
     context "configuring the gateway" do
+      before do
+        ENV["APN_GATEWAY"] = nil
+      end
+
       let(:options) { {:key => ENV["APN_KEY"], :cert => ENV["APN_CERT"]} }
 
       it "defaults to Apple's sandbox (gateway.sandbox.push.apple.com)" do
@@ -33,14 +37,11 @@ describe EventMachine::APN::Client do
       end
 
       it "uses an environment variable for the gateway host (APN_GATEWAY) if specified" do
-        original_apn_gateway = ENV["APN_GATEWAY"]
         ENV["APN_GATEWAY"] = "localhost"
 
         expected_args = ["localhost", 2195, EM::APN::Client, options]
         EM.should_receive(:connect).with(*expected_args).and_return(client)
         EM::APN::Client.connect.should == client
-
-        ENV["APN_GATEWAY"] = original_apn_gateway
       end
 
       it "switches to the production gateway if APN_ENV is set to 'production'" do
@@ -56,21 +57,15 @@ describe EventMachine::APN::Client do
 
     context "configuring SSL" do
       it "falls back to environment variables for key and cert (APN_KEY and APN_CERT) if they are unspecified" do
-        original_apn_key  = ENV["APN_KEY"]
-        original_apn_cert = ENV["APN_CERT"]
-
         ENV["APN_KEY"]  = "path/to/key.pem"
         ENV["APN_CERT"] = "path/to/cert.pem"
 
-        expected_args = ["gateway.sandbox.push.apple.com", 2195, EM::APN::Client, {
+        expected_args = ["127.0.0.1", 2195, EM::APN::Client, {
           :key  => "path/to/key.pem",
           :cert => "path/to/cert.pem"
         }]
         EM.should_receive(:connect).with(*expected_args).and_return(client)
         EM::APN::Client.connect.should == client
-
-        ENV["APN_KEY"]  = original_apn_key
-        ENV["APN_CERT"] = original_apn_cert
       end
 
       it "key and cert are used to start SSL" do

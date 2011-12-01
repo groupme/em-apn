@@ -10,7 +10,7 @@
 # list:
 #
 #     expect {
-#       EM::APN.push(token, aps, custom)
+#       client.deliver('notification)
 #     }.to change { EM::APN.deliveries.size }.by(1)
 #
 #     notification = EM::APN.deliveries.first
@@ -24,17 +24,13 @@ module EventMachine
     end
 
     Client.class_eval do
-      unless instance_methods.include?(:deliver_with_testing)
-        def deliver_with_testing(notification)
-          EM::APN.deliveries << notification
-          deliver_without_testing(notification)
-        end
-        alias :deliver_without_testing :deliver
-        alias :deliver :deliver_with_testing
+      def connect
+        # No-op
+      end
 
-        def send_data(data)
-          # Nope
-        end
+      def deliver(notification)
+        log(notification)
+        EM::APN.deliveries << notification
       end
     end
   end

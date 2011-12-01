@@ -9,18 +9,10 @@ describe EventMachine::APN::Client do
     client
   end
 
-  describe ".connect" do
-    let(:client) { double(EventMachine::APN::Client) }
-
-    it "returns an EM connection" do
-      expected_args = ["HOST", 2195, EM::APN::Client, {:key => "KEY", :cert => "CERT"}]
-      EM.should_receive(:connect).with(*expected_args).and_return(client)
-
-      EM::APN::Client.connect(
-        :gateway => "HOST",
-        :key     => "KEY",
-        :cert    => "CERT"
-      ).should == client
+  describe ".new" do
+    it "creates a new client without a connection" do
+      client = EM::APN::Client.new
+      client.connection.should be_nil
     end
 
     context "configuring the gateway" do
@@ -31,27 +23,33 @@ describe EventMachine::APN::Client do
       let(:options) { {:key => ENV["APN_KEY"], :cert => ENV["APN_CERT"]} }
 
       it "defaults to Apple's sandbox (gateway.sandbox.push.apple.com)" do
-        expected_args = ["gateway.sandbox.push.apple.com", 2195, EM::APN::Client, options]
-        EM.should_receive(:connect).with(*expected_args).and_return(client)
-        EM::APN::Client.connect.should == client
+        client = EM::APN::Client.new
+        client.gateway.should == "gateway.sandbox.push.apple.com"
+        client.port.should == 2195
       end
 
       it "uses an environment variable for the gateway host (APN_GATEWAY) if specified" do
         ENV["APN_GATEWAY"] = "localhost"
 
-        expected_args = ["localhost", 2195, EM::APN::Client, options]
-        EM.should_receive(:connect).with(*expected_args).and_return(client)
-        EM::APN::Client.connect.should == client
+        client = EM::APN::Client.new
+        client.gateway.should == "localhost"
+        client.port.should == 2195
       end
 
       it "switches to the production gateway if APN_ENV is set to 'production'" do
         ENV["APN_ENV"] = "production"
 
-        expected_args = ["gateway.push.apple.com", 2195, EM::APN::Client, options]
-        EM.should_receive(:connect).with(*expected_args).and_return(client)
-        EM::APN::Client.connect.should == client
+        client = EM::APN::Client.new
+        client.gateway.should == "gateway.push.apple.com"
+        client.port.should == 2195
 
         ENV["APN_ENV"] = nil
+      end
+
+      it "takes arguments for the gateway and port" do
+        client = EM::APN::Client.new(:gateway => "localhost", :port => 3333)
+        client.gateway.should == "localhost"
+        client.port.should == 3333
       end
     end
 
@@ -60,24 +58,34 @@ describe EventMachine::APN::Client do
         ENV["APN_KEY"]  = "path/to/key.pem"
         ENV["APN_CERT"] = "path/to/cert.pem"
 
-        expected_args = ["127.0.0.1", 2195, EM::APN::Client, {
-          :key  => "path/to/key.pem",
-          :cert => "path/to/cert.pem"
-        }]
-        EM.should_receive(:connect).with(*expected_args).and_return(client)
-        EM::APN::Client.connect.should == client
+        client = EM::APN::Client.new
+        client.key.should == "path/to/key.pem"
+        client.cert.should == "path/to/cert.pem"
       end
 
-      it "key and cert are used to start SSL" do
-        EM::APN::Client.any_instance.should_receive(:start_tls).with(
-          :private_key_file => "path/to/key.pem",
-          :cert_chain_file  => "path/to/cert.pem",
-          :verify_peer      => false
-        )
-        EM.run_block do
-          EM::APN::Client.connect(:key => "path/to/key.pem", :cert => "path/to/cert.pem")
-        end
+      it "takes arguments for the key and cert" do
+        client = EM::APN::Client.new(:key => "key.pem", :cert => "cert.pem")
+        client.key.should == "key.pem"
+        client.cert.should == "cert.pem"
       end
+    end
+  end
+
+  describe "#connect" do
+    it "creates a connection to the gateway" do
+      client = EM::APN::Client.new
+      client.connection.should be_nil
+
+      EM.run_block { client.connect }
+      client.connection.should be_an_instance_of(EM::APN::Connection)
+    end
+
+    it "passes the client to the new connection" do
+      client = EM::APN::Client.new
+      connection = double(EM::APN::Connection, :connection_completed => nil, :unbind => nil)
+
+      EM::APN::Connection.should_receive(:new).with(instance_of(Fixnum), client).and_return(connection)
+      EM.run_block { client.connect }
     end
   end
 
@@ -89,8 +97,9 @@ describe EventMachine::APN::Client do
       delivered = nil
 
       EM.run_block do
-        client = EM::APN::Client.connect
-        client.stub(:send_data).and_return do |data|
+        client = EM::APN::Client.new
+        client.connect
+        client.connection.stub(:send_data).and_return do |data|
           delivered = data.unpack("cNNnH64na*")
           nil
         end
@@ -108,7 +117,7 @@ describe EventMachine::APN::Client do
       notification = EM::APN::Notification.new(token, :alert => "Hello world")
 
       EM.run_block do
-        client = EM::APN::Client.connect
+        client = EM::APN::Client.new
         client.deliver(notification)
       end
 
@@ -117,32 +126,39 @@ describe EventMachine::APN::Client do
     end
   end
 
-  describe "#closed?" do
-    it "returns true if the connection has been closed" do
-      client = nil
+  describe "#on_error" do
+    it "sets a callback that is invoked when we receive data from Apple" do
+      error = nil
 
       EM.run_block do
-        client = EM::APN::Client.connect
-        client.should_not be_closed
-        client.close_connection
+        client = EM::APN::Client.new
+        client.connect
+        client.on_error { |e| error = e }
+        client.connection.receive_data([8, 8, 0].pack("ccN"))
       end
 
-      client.should be_closed
+      error.should be
+
+      error.command.should == 8
+      error.status_code.should == 8
+      error.identifier.should == 0
+
+      error.description.should == "Invalid token"
+      error.to_s.should == "CODE=8 ID=0 DESC=Invalid token"
     end
   end
 
-  describe "#receive_data" do
-    it "logs a message" do
-      test_log = StringIO.new
-      EM::APN.logger = Logger.new(test_log)
+  describe "#on_close" do
+    it "sets a callback that is invoked when the connection closes" do
+      called = false
 
       EM.run_block do
-        client = EM::APN::Client.connect
-        client.receive_data([8, 8, 0].pack("ccN"))
+        client = EM::APN::Client.new
+        client.on_close { called = true }
+        client.connect # This should unbind immediately.
       end
 
-      test_log.rewind
-      test_log.read.should include("CODE=8 ID=0 DESC=Invalid token")
+      called.should be_true
     end
   end
 end

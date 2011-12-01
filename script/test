@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+require "rubygems"
+require "bundler/setup"
+require "em-apn"
+
+ENV["APN_KEY"]  = File.join(File.dirname(__FILE__), "..", "certs", "key.pem")
+ENV["APN_CERT"] = File.join(File.dirname(__FILE__), "..", "certs", "cert.pem")
+
+TOKEN = "fe9515ba7556cfdcfca6530235c95dff682fac765838e749a201a7f6cf3792e6"
+
+def notify(client, queue)
+  if queue.empty?
+    EM.add_periodic_timer(1) { EM.stop }
+  else
+    queue.pop do |alert|
+      notification = EM::APN::Notification.new(TOKEN, :alert => alert)
+      client.deliver(notification)
+
+      interval = rand(20).to_f / 100.0
+      EM.add_timer(interval) { notify(client, queue) }
+    end
+  end
+end
+
+EM.run do
+  client = EM::APN::Client.new(:gateway => "127.0.0.1")
+  queue = EM::Queue.new
+  queue.push *((1..5).to_a)
+  queue.push "DISCONNECT"
+  queue.push *((6..10).to_a)
+  queue.push "DISCONNECT"
+  queue.push *((11..15).to_a)
+
+  EM.next_tick { notify(client, queue) }
+end

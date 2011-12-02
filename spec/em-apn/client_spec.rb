@@ -111,10 +111,12 @@ describe EventMachine::APN::Client do
     end
 
     it "logs a message" do
+      alert = "Hello world this is a long push notification to you"
+
       test_log = StringIO.new
       EM::APN.logger = Logger.new(test_log)
 
-      notification = EM::APN::Notification.new(token, :alert => "Hello world")
+      notification = EM::APN::Notification.new(token, "alert" => alert)
 
       EM.run_block do
         client = EM::APN::Client.new
@@ -122,7 +124,7 @@ describe EventMachine::APN::Client do
       end
 
       test_log.rewind
-      test_log.read.should include("TOKEN=#{token}")
+      test_log.read.should include("TOKEN=#{token} ALERT=#{alert[0..49]}")
     end
   end
 

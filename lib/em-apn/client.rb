@@ -46,7 +46,7 @@ module EventMachine
       end
 
       def log(notification)
-        EM::APN.logger.info("TOKEN=#{notification.token}")
+        EM::APN.logger.info("TOKEN=#{notification.token} ALERT=#{notification.alert}")
       end
     end
   end

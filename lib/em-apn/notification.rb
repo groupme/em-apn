@@ -32,6 +32,10 @@ module EventMachine
         @identifier = new_identifier.to_i
       end
 
+      def alert
+        @aps["alert"][0..49] if @aps.include?("alert")
+      end
+
       private
 
       def build_payload

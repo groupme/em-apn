@@ -7,13 +7,14 @@ We want:
 
 ## Usage ##
 
-A simple interface is provided to just fire and forget:
+In a nutshell:
 
     require "em-apn"
 
-    EM.run do
-      EM::APN.push(token, :alert => "Hello world")
-    end
+    # Inside a reactor...
+    notification = EM::APN::Notification.new(token, :alert => alert)
+    client = EM::APN::Client.connect
+    client.deliver(notification)
 
 Using this interface, the easiest way to configure the connection is by setting
 some environment variables so that EM::APN can find your SSL certificates:
@@ -27,32 +28,35 @@ environment variable to `production`:
 
     ENV["APN_ENV"] = "production"
 
-This simple interface takes care of setting up and re-using a single,
-persistent connection to Apple's servers, and re-connects on demand if the
-connection is dropped.
+The gateway and SSL certs can also be set directly when instantiating the object:
 
-It's also possible to create a connection manually, and currently, this is
-the only option if you want to attach a callback for data returned by Apple:
+    client = EM::APN::Client.connect(
+      :gateway => "some.host",
+      :key     => "/path/to/key.pem",
+      :cert    => "/path/to/cert.pem"
+    )
 
-    EM.run do
-      @client = EM::APN::Client.connect(
-        :key  => "/path/to/key.pem",
-        :cert => "/path/to/cert.pem"
-      )
-      @client.on_receipt do |data|
-        # Do something
-      end
+The client manages an underlying `EM::Connection`, and it will automatically
+reconnect to the gateway when the connection is closed. Callbacks can be set
+on the client to handle error responses from the gateway and connection close
+events:
 
-      # In some other callback
-      notification = EM::APN::Notification.new(token, :alert => "Hello world")
-      @client.deliver(notification)
+    client = EM::APN::Client.connect
+    client.on_error do |response|
+      # See EM::APN::ErrorResponse
     end
 
-In this example, we're explicitly setting the key, and cert with options to
-`APN::Client.connect`, but the environment variables mentioned above will
-work as well. Please keep in mind that Apple will close the connection
-whenever an error is returned, and `APN::Client.closed?` should be polled to
-check for disconnects.
+    client.on_close do
+      # Do something.
+    end
+
+In our experience, we've found that Apple immediately closes the connection
+whenever an error is detected, so the error and close callbacks are nearly
+always called one-to-one. These methods exist as a convenience, and the
+callbacks can also be set directly to anything that responds to `#call`:
+
+    client.error_callback = Proc.new { |response| ... }
+    client.close_callback = Proc.new { ... }
 
 ### Max Payload Size ###
 

@@ -20,7 +20,8 @@ if token.nil? || alert.nil?
 end
 
 EM.run do
-  EM::APN.push(token, :alert => alert)
+  client = EM::APN::Client.connect
+  client.deliver(EM::APN::Notification.new(token, :alert => alert))
 
   # Hopefully give ourselves enough time to receive a response on failure.
   # Wish there was a better way to do this. Or at least a more timely way.

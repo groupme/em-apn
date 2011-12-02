@@ -7,8 +7,8 @@ require "bundler/setup"
 require "em-apn"
 require "em-apn/server"
 
-ENV["APN_KEY"]  = File.join(File.dirname(__FILE__), "certs", "key.pem")
-ENV["APN_CERT"] = File.join(File.dirname(__FILE__), "certs", "cert.pem")
+ENV["APN_KEY"]  = File.join(File.dirname(__FILE__), "..", "certs", "key.pem")
+ENV["APN_CERT"] = File.join(File.dirname(__FILE__), "..", "certs", "cert.pem")
 
 EM::APN.logger.info("Starting push server")
 

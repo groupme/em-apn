@@ -2,75 +2,51 @@
 
 module EventMachine
   module APN
-    class Client < EventMachine::Connection
+    class Client
       SANDBOX_GATEWAY    = "gateway.sandbox.push.apple.com"
       PRODUCTION_GATEWAY = "gateway.push.apple.com"
       PORT               = 2195
 
-      # Create a connection to Apple's push notification gateway
-      #
-      # This convenience method will adopt environment variables and defaults
-      # for the necessary parameters -- gateway host, port, key, and cert.
-      #
-      # You can use EM.connect yourself, but in that case, be sure to pass along
-      # the key and cert for the SSL connection.
+      attr_reader :gateway, :port, :key, :cert, :connection, :error_callback, :close_callback
+
+      # A convenience method for creating and connecting.
       def self.connect(options = {})
-        options = options.dup
-        options[:key]  ||= ENV["APN_KEY"]
-        options[:cert] ||= ENV["APN_CERT"]
-
-        gateway = options.delete(:gateway)
-        gateway ||= ENV["APN_GATEWAY"]
-        gateway ||= (ENV["APN_ENV"] == "production") ? PRODUCTION_GATEWAY : SANDBOX_GATEWAY
-
-        EM.connect(gateway, PORT, self, options)
-      end
-
-      def initialize(options = {})
-        @key    = options[:key]
-        @cert   = options[:cert]
-        @closed = false
-      end
-
-      def deliver(notification)
-        LogMessage.new(Response.new(notification)).log
-        send_data(notification.data)
-      end
-
-      def on_receipt(&block)
-        @on_receipt_callback = block
-      end
-
-      def closed?
-        @closed
-      end
-
-      #
-      # EM callbacks
-      #
-
-      def post_init
-        start_tls(
-          :private_key_file => @key,
-          :cert_chain_file  => @cert,
-          :verify_peer      => false
-        )
-      end
-
-      def receive_data(data)
-        data_array = data.unpack("ccN")
-        LogMessage.new(ErrorResponse.new(*data_array)).log
-
-        if @on_receipt_callback
-          @on_receipt_callback.call(data_array)
+        new(options).tap do |client|
+          client.connect
         end
       end
 
-      # The caller should attempt to detect closed connections by calling
-      # Client#closed? and re-connecting.
-      def unbind
-        @closed = true
-        EM::APN.logger.info("Connection closed")
+      def initialize(options = {})
+        @key  = options[:key]  || ENV["APN_KEY"]
+        @cert = options[:cert] || ENV["APN_CERT"]
+        @port = options[:port] || PORT
+
+        @gateway = options[:gateway] || ENV["APN_GATEWAY"]
+        @gateway ||= (ENV["APN_ENV"] == "production") ? PRODUCTION_GATEWAY : SANDBOX_GATEWAY
+
+        @connection = nil
+      end
+
+      def connect
+        @connection = EM.connect(gateway, port, Connection, self)
+      end
+
+      def deliver(notification)
+        connect if connection.nil? || connection.disconnected?
+        log(notification)
+        connection.send_data(notification.data)
+      end
+
+      def on_error(&block)
+        @error_callback = block
+      end
+
+      def on_close(&block)
+        @close_callback = block
+      end
+
+      def log(notification)
+        EM::APN.logger.info("TOKEN=#{notification.token} ALERT=#{notification.alert}")
       end
     end
   end

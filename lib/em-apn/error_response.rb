@@ -14,6 +14,8 @@ module EventMachine
         255 => "None (unknown)"
       }
 
+      attr_reader :command, :status_code, :identifier
+
       def initialize(command, status_code, identifier)
         @command     = command
         @status_code = status_code

@@ -82,7 +82,7 @@ describe EventMachine::APN::Client do
 
     it "passes the client to the new connection" do
       client = EM::APN::Client.new
-      connection = double(EM::APN::Connection, :connection_completed => nil, :unbind => nil)
+      connection = double(EM::APN::Connection).as_null_object
 
       EM::APN::Connection.should_receive(:new).with(instance_of(Fixnum), client).and_return(connection)
       EM.run_block { client.connect }

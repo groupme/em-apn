@@ -85,12 +85,14 @@ describe EventMachine::APN::Notification do
       data[1].should == 0 # Identifier
       data[2].should == 0 # Expiry
     end
+  end
 
+  describe "#validate!" do
     it "raises PayloadTooLarge error if PAYLOAD_MAX_BYTES exceeded" do
       notification = EM::APN::Notification.new(token, {:alert => "X" * 512})
 
       lambda {
-        notification.data
+        notification.validate!
       }.should raise_error(EM::APN::Notification::PayloadTooLarge)
     end
   end
@@ -132,6 +134,36 @@ describe EventMachine::APN::Notification do
       epoch = Time.now.to_i
       notification = EM::APN::Notification.new(token, {}, {}, {:expiry => epoch})
       notification.expiry.should == epoch
+    end
+  end
+
+  describe "#truncate_alert!" do
+    context "when the data size would exceed the APN limit" do
+      it "truncates the alert" do
+        notification = EM::APN::Notification.new(token, { "alert" => "X" * 300 })
+        notification.data.size.should be > EM::APN::Notification::DATA_MAX_BYTES
+
+        notification.truncate_alert!
+        notification.data.size.should_not be > EM::APN::Notification::DATA_MAX_BYTES
+        parsed_payload = Yajl::Parser.parse(notification.payload)
+        parsed_payload["aps"]["alert"].size.should == 191
+      end
+
+      it "truncates the alert properly when it is JSON serialized into a different size" do
+        notification = EM::APN::Notification.new(token, { "alert" => '"' * 300 })
+        notification.truncate_alert!
+        parsed_payload = Yajl::Parser.parse(notification.payload)
+        parsed_payload["aps"]["alert"].size.should == 95
+      end
+    end
+
+    context "when the data size would not exceed the APN limit" do
+      it "does not change the alert" do
+        notification = EM::APN::Notification.new(token, { "alert" => "Hello world" })
+        notification.truncate_alert!
+        parsed_payload = Yajl::Parser.parse(notification.payload)
+        parsed_payload["aps"]["alert"].should == "Hello world"
+      end
     end
   end
 end

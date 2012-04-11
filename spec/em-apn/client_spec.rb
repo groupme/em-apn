@@ -124,7 +124,21 @@ describe EventMachine::APN::Client do
       end
 
       test_log.rewind
-      test_log.read.should include("TOKEN=#{token} ALERT=#{alert[0..49]}")
+      test_log.read.should include("TOKEN=#{token} PAYLOAD=#{notification.payload.inspect}")
+    end
+
+    context "when the notification is not valid" do
+      it "raises an exception" do
+        notification = EM::APN::Notification.new(token)
+        notification.stub(:validate!).and_raise(RuntimeError.new("Boo"))
+
+        expect {
+          EM.run_block do
+            client = EM::APN::Client.new
+            client.deliver(notification)
+          end
+        }.to raise_error(RuntimeError)
+      end
     end
   end
 

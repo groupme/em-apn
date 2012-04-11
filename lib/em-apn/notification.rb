@@ -3,7 +3,8 @@
 module EventMachine
   module APN
     class Notification
-      PAYLOAD_MAX_BYTES = 256
+      DATA_MAX_BYTES    = 256
+
       class PayloadTooLarge < StandardError;end
 
       attr_reader :token
@@ -21,43 +22,38 @@ module EventMachine
       end
 
       def payload
-        @payload ||= build_payload
+        Yajl::Encoder.encode(@custom.merge(:aps => @aps))
       end
 
+      # Documentation about this format is here:
+      # http://developer.apple.com/library/ios/#documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingWIthAPS/CommunicatingWIthAPS.html
       def data
-        @data ||= build_data
+        identifier = @identifier || 0
+        expiry     = @expiry || 0
+        size = [payload].pack("a*").size
+        data_array = [1, identifier, expiry, 32, token, size, payload]
+        data_array.pack("cNNnH*na*")
+      end
+
+      def validate!
+        if data.size > DATA_MAX_BYTES
+          error = "max is #{DATA_MAX_BYTES} bytes, but got #{data.size}: #{payload.inspect}"
+          raise PayloadTooLarge.new(error)
+        else
+          true
+        end
       end
 
       def identifier=(new_identifier)
         @identifier = new_identifier.to_i
       end
 
-      def alert
-        @aps["alert"][0..49] if @aps.include?("alert")
-      end
-
-      private
-
-      def build_payload
-        payload = @custom.merge(:aps => @aps)
-        Yajl::Encoder.encode(payload)
-      end
-
-      # Documentation about this format is here:
-      # http://developer.apple.com/library/ios/#documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingWIthAPS/CommunicatingWIthAPS.html
-      def build_data
-        identifier = @identifier || 0
-        expiry     = @expiry || 0
-
-        size = [payload].pack("a*").size
-        data_array = [1, identifier, expiry, 32, token, size, payload]
-        data = data_array.pack("cNNnH*na*")
-        if data.size > PAYLOAD_MAX_BYTES
-          error = "max is #{PAYLOAD_MAX_BYTES} bytes (got #{data.size})"
-          raise PayloadTooLarge.new(error)
+      def truncate_alert!
+        while data.size > DATA_MAX_BYTES && !@aps["alert"].nil? && @aps["alert"].size > 0
+          @aps["alert"] = @aps["alert"][0..-2]
         end
-        data
       end
+
     end
   end
 end

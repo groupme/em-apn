@@ -32,6 +32,7 @@ module EventMachine
       end
 
       def deliver(notification)
+        notification.validate!
         connect if connection.nil? || connection.disconnected?
         log(notification)
         connection.send_data(notification.data)
@@ -46,7 +47,7 @@ module EventMachine
       end
 
       def log(notification)
-        EM::APN.logger.info("TOKEN=#{notification.token} ALERT=#{notification.alert}")
+        EM::APN.logger.info("TOKEN=#{notification.token} PAYLOAD=#{notification.payload.inspect}")
       end
     end
   end

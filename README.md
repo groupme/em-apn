@@ -62,13 +62,15 @@ callbacks can also be set directly to anything that responds to `#call`:
 
 Apple enforces a limit of __256 bytes__ for the __entire payload__.
 
-We raise an `EM::APN::Notification::PayloadTooLarge` exception.
+If you attempt to deliver a notification that exceeds that limit, the library
+will raise an `EM::APN::Notification::PayloadTooLarge` exception.
 
-How you truncate your payloads is up to you. Be especially careful when dealing with multi-byte data.
+To prevent that from happening, you can call `#truncate_alert!` on the
+notification.
 
-## TODO ##
-
- * Support the feedback API for dead tokens
+    notification = EM::APN::Notification.new(...)
+    notification.truncate_alert!
+    client.deliver(notification)
 
 ## Inspiration ##
 

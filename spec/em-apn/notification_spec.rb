@@ -155,6 +155,13 @@ describe EventMachine::APN::Notification do
         parsed_payload = Yajl::Parser.parse(notification.payload)
         parsed_payload["aps"]["alert"].size.should == 95
       end
+
+      it "truncates the alert properly for multi-byte Unicode characters" do
+        notification = EM::APN::Notification.new(token, { "alert" => [57352].pack('U') * 500 })
+        notification.truncate_alert!
+        parsed_payload = Yajl::Parser.parse(notification.payload)
+        parsed_payload["aps"]["alert"].size.should == 63
+      end
     end
 
     context "when the data size would not exceed the APN limit" do

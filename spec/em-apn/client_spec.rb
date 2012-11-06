@@ -177,4 +177,18 @@ describe EventMachine::APN::Client do
       called.should be_true
     end
   end
+
+  describe "#on_open" do
+    it "sets a callback that is invoked when the connection is opened" do
+      called = false
+
+      EM.run_block do
+        client = EM::APN::Client.new
+        client.on_open { called = true }
+        client.connect # This should unbind immediately.
+      end
+
+      called.should be_true
+    end
+  end
 end

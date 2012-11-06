@@ -23,6 +23,7 @@ module EventMachine
 
       def connection_completed
         EM::APN.logger.info("Connection completed")
+        client.open_callback.call if client.open_callback
       end
 
       def receive_data(data)

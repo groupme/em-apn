@@ -38,7 +38,7 @@ The gateway and SSL certs can also be set directly when instantiating the object
 
 The client manages an underlying `EM::Connection`, and it will automatically
 reconnect to the gateway when the connection is closed. Callbacks can be set
-on the client to handle error responses from the gateway and connection close
+on the client to handle error responses from the gateway, connection open & close
 events:
 
     client = EM::APN::Client.connect
@@ -50,6 +50,10 @@ events:
       # Do something.
     end
 
+    client.on_open do
+      # Do something
+    end
+
 In our experience, we've found that Apple immediately closes the connection
 whenever an error is detected, so the error and close callbacks are nearly
 always called one-to-one. These methods exist as a convenience, and the
@@ -57,6 +61,7 @@ callbacks can also be set directly to anything that responds to `#call`:
 
     client.error_callback = Proc.new { |response| ... }
     client.close_callback = Proc.new { ... }
+    client.open_callback  = Proc.new { ... }
 
 ### Max Payload Size ###
 

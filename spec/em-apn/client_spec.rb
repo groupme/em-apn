@@ -13,6 +13,7 @@ describe EventMachine::APN::Client do
     it "creates a new client without a connection" do
       client = EM::APN::Client.new
       client.connection.should be_nil
+      client.feedback_connection.should be_nil
     end
 
     context "configuring the gateway" do
@@ -189,6 +190,46 @@ describe EventMachine::APN::Client do
       end
 
       called.should be_true
+    end
+  end
+
+  describe "#connect_feedback" do
+    it "creates a connection to the feedback service" do
+      client = EM::APN::Client.new
+      client.feedback_connection.should be_nil
+
+      EM.run_block { client.connect_feedback }
+      client.feedback_connection.should be_an_instance_of(EM::APN::FeedbackConnection)
+    end
+
+    it "passes the client to the new connection" do
+      client = EM::APN::Client.new
+      connection = double(EM::APN::FeedbackConnection).as_null_object
+
+      EM::APN::FeedbackConnection.should_receive(:new).with(instance_of(Fixnum), client).and_return(connection)
+      EM.run_block { client.connect_feedback }
+    end
+  end
+
+  describe "#on_feedback" do
+    it "sets a callback that is invoked when we receive data from Apple" do
+      failed_attempt = nil
+
+
+      timestamp = Time.utc(1995, 12, 21)
+      device_token = 'fe15a27d5df3c34778defb1f4f3980265cc52c0c047682223be59fb68500a9a2'
+      tuple = [timestamp.to_i, 32, device_token].pack('NnH64')
+
+      EM.run_block do
+        client = EM::APN::Client.new
+        client.connect_feedback
+        client.on_feedback { |data | failed_attempt = data }
+        client.feedback_connection.receive_data(tuple)
+      end
+
+      failed_attempt.should be_an_instance_of(EM::APN::FailedDeliveryAttempt)
+      failed_attempt.device_token.should == device_token
+      failed_attempt.timestamp.should == timestamp
     end
   end
 end

@@ -49,8 +49,9 @@ module EventMachine
       end
 
       def truncate_alert!
-        while data.size > DATA_MAX_BYTES && !@aps["alert"].nil? && @aps["alert"].size > 0
-          @aps["alert"] = @aps["alert"][0..-2]
+        alert_key = (!@aps[:alert].nil?) ? :alert : "alert"
+        while data.size > DATA_MAX_BYTES && !@aps[alert_key].nil? && @aps[alert_key].size > 0
+          @aps[alert_key] = @aps[alert_key][0..-2]
         end
       end
 

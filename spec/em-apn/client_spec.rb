@@ -179,6 +179,14 @@ describe EventMachine::APN::Client do
   end
 
   describe "#on_open" do
+    before do
+      @server = TCPServer.new(EventMachine::APN::Client::PORT)
+    end
+
+    after do
+      @server.close
+    end
+
     it "sets a callback that is invoked when the connection is opened" do
       called = false
 

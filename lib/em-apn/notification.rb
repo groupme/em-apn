@@ -22,7 +22,7 @@ module EventMachine
       end
 
       def payload
-        Yajl::Encoder.encode(@custom.merge(:aps => @aps))
+        MultiJson.encode(@custom.merge(:aps => @aps))
       end
 
       # Documentation about this format is here:

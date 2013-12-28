@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
 require "eventmachine"
-require "yajl"
+require "multi_json"
 require "logger"
 require "em-apn/client"
 require "em-apn/connection"

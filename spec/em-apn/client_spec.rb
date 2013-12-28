@@ -171,7 +171,7 @@ describe EventMachine::APN::Client do
       EM.run_block do
         client = EM::APN::Client.new
         client.on_close { called = true }
-        client.connect # This should unbind immediately.
+        client.connect
       end
 
       called.should be_true
@@ -193,7 +193,7 @@ describe EventMachine::APN::Client do
       EM.run_block do
         client = EM::APN::Client.new
         client.on_open { called = true }
-        client.connect # This should unbind immediately.
+        client.connect
       end
 
       called.should be_true

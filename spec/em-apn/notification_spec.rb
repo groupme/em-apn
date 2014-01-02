@@ -144,9 +144,15 @@ describe EventMachine::APN::Notification do
         notification.data.size.should be > EM::APN::Notification::DATA_MAX_BYTES
 
         notification.truncate_alert!
-        notification.data.size.should_not be > EM::APN::Notification::DATA_MAX_BYTES
+        notification.data.size.should be <= EM::APN::Notification::DATA_MAX_BYTES
         parsed_payload = MultiJson.decode(notification.payload)
         parsed_payload["aps"]["alert"].size.should == 191
+      end
+
+      it "truncates the alert properly when symbol payload keys are used" do
+        notification = EM::APN::Notification.new(token, { "alert" => "X" * 300 })
+        notification.truncate_alert!
+        notification.data.size.should be <= EM::APN::Notification::DATA_MAX_BYTES
       end
 
       it "truncates the alert properly when it is JSON serialized into a different size" do

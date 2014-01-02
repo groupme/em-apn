@@ -3,22 +3,23 @@
 module EventMachine
   module APN
     class Notification
-      DATA_MAX_BYTES    = 256
+      DATA_MAX_BYTES = 256
+      ALERT_KEY = "alert"
 
-      class PayloadTooLarge < StandardError;end
+      class PayloadTooLarge < StandardError; end
 
-      attr_reader :token
-      attr_accessor :identifier, :expiry
+      attr_reader :token, :identifier
+      attr_accessor :expiry
 
       def initialize(token, aps = {}, custom = {}, options = {})
         raise "Bad push token: #{token}" if token.nil? || (token.length != 64)
 
         @token  = token
-        @aps    = aps
+        @aps    = aps.stringify_keys!
         @custom = custom
+        @expiry = options[:expiry]
 
         self.identifier = options[:identifier] if options[:identifier]
-        self.expiry = options[:expiry] if options[:expiry]
       end
 
       def payload
@@ -49,8 +50,10 @@ module EventMachine
       end
 
       def truncate_alert!
-        while data.size > DATA_MAX_BYTES && !@aps["alert"].nil? && @aps["alert"].size > 0
-          @aps["alert"] = @aps["alert"][0..-2]
+        return unless @aps.has_key?(ALERT_KEY)
+
+        while data.size > DATA_MAX_BYTES && @aps[ALERT_KEY].size > 0
+          @aps[ALERT_KEY].chop!
         end
       end
 

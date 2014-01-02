@@ -3,6 +3,7 @@
 require "eventmachine"
 require "multi_json"
 require "logger"
+require "extensions/hash"
 require "em-apn/client"
 require "em-apn/connection"
 require "em-apn/notification"

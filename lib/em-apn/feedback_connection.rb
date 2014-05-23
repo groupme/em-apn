@@ -14,6 +14,7 @@ module EventMachine
       end
 
       def post_init
+        @buf = ''
         start_tls(
           :private_key_file => client.key,
           :cert_chain_file  => client.cert,
@@ -26,11 +27,14 @@ module EventMachine
       end
 
       def receive_data(data)
-        attempt = FailedDeliveryAttempt.new(data)
-        EM::APN.logger.warn(attempt.to_s)
+        @buf << data
+        while @buf.size >= 38
+          attempt = FailedDeliveryAttempt.new(@buf.slice!(0,38))
+          EM::APN.logger.warn(attempt.to_s)
 
-        if client.feedback_callback
-          client.feedback_callback.call(attempt)
+          if client.feedback_callback
+            client.feedback_callback.call(attempt)
+          end
         end
       end
 

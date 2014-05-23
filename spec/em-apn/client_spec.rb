@@ -232,6 +232,7 @@ describe EventMachine::APN::Client do
         client = EM::APN::Client.new
         client.connect_feedback
         client.on_feedback { |data | failed_attempt = data }
+        client.feedback_connection.receive_data(tuple.slice!(0,10))
         client.feedback_connection.receive_data(tuple)
       end
 

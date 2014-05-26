@@ -14,7 +14,7 @@ module EventMachine
       end
 
       def post_init
-        @buf = StringIO.new('', 'a+b')
+        @buf = StringIO.new('', 'ab+')
         start_tls(
           :private_key_file => client.key,
           :cert_chain_file  => client.cert,
@@ -39,7 +39,7 @@ module EventMachine
             client.feedback_callback.call(attempt)
           end
         end
-        @buf.reopen(@buf.read, 'a+b')
+        @buf.reopen(@buf.read, 'ab+')
       end
 
       def unbind

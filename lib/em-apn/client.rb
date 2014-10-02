@@ -7,7 +7,7 @@ module EventMachine
       PRODUCTION_GATEWAY = "gateway.push.apple.com"
       PORT               = 2195
 
-      attr_reader :gateway, :port, :key, :cert, :connection, :error_callback, :close_callback
+      attr_reader :gateway, :port, :key, :cert, :connection, :error_callback, :close_callback, :open_callback
 
       # A convenience method for creating and connecting.
       def self.connect(options = {})
@@ -44,6 +44,10 @@ module EventMachine
 
       def on_close(&block)
         @close_callback = block
+      end
+
+      def on_open(&block)
+        @open_callback = block
       end
 
       def log(notification)

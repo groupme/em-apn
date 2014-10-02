@@ -30,7 +30,7 @@ describe EventMachine::APN::Notification do
         :badge => 10,
         :sound => "ding.aiff"
       })
-      payload = Yajl::Parser.parse(notification.payload)
+      payload = MultiJson.decode(notification.payload)
       payload["aps"]["alert"].should == "Hello world"
       payload["aps"]["badge"].should == 10
       payload["aps"]["sound"].should == "ding.aiff"
@@ -38,7 +38,7 @@ describe EventMachine::APN::Notification do
 
     it "returns custom properties as well" do
       notification = EM::APN::Notification.new(token, {}, {:line => "I'm super bad"})
-      payload = Yajl::Parser.parse(notification.payload)
+      payload = MultiJson.decode(notification.payload)
       payload["line"].should == "I'm super bad"
     end
 
@@ -53,7 +53,7 @@ describe EventMachine::APN::Notification do
           "custom" => "param"
         }
       )
-      payload = Yajl::Parser.parse(notification.payload)
+      payload = MultiJson.decode(notification.payload)
       payload["aps"]["alert"].should == "Hello world"
       payload["aps"]["badge"].should == 10
       payload["aps"]["sound"].should == "ding.aiff"
@@ -144,22 +144,28 @@ describe EventMachine::APN::Notification do
         notification.data.size.should be > EM::APN::Notification::DATA_MAX_BYTES
 
         notification.truncate_alert!
-        notification.data.size.should_not be > EM::APN::Notification::DATA_MAX_BYTES
-        parsed_payload = Yajl::Parser.parse(notification.payload)
+        notification.data.size.should be <= EM::APN::Notification::DATA_MAX_BYTES
+        parsed_payload = MultiJson.decode(notification.payload)
         parsed_payload["aps"]["alert"].size.should == 191
+      end
+
+      it "truncates the alert properly when symbol payload keys are used" do
+        notification = EM::APN::Notification.new(token, { "alert" => "X" * 300 })
+        notification.truncate_alert!
+        notification.data.size.should be <= EM::APN::Notification::DATA_MAX_BYTES
       end
 
       it "truncates the alert properly when it is JSON serialized into a different size" do
         notification = EM::APN::Notification.new(token, { "alert" => '"' * 300 })
         notification.truncate_alert!
-        parsed_payload = Yajl::Parser.parse(notification.payload)
+        parsed_payload = MultiJson.decode(notification.payload)
         parsed_payload["aps"]["alert"].size.should == 95
       end
 
       it "truncates the alert properly for multi-byte Unicode characters" do
         notification = EM::APN::Notification.new(token, { "alert" => [57352].pack('U') * 500 })
         notification.truncate_alert!
-        parsed_payload = Yajl::Parser.parse(notification.payload)
+        parsed_payload = MultiJson.decode(notification.payload)
         parsed_payload["aps"]["alert"].size.should == 63
       end
     end
@@ -168,7 +174,7 @@ describe EventMachine::APN::Notification do
       it "does not change the alert" do
         notification = EM::APN::Notification.new(token, { "alert" => "Hello world" })
         notification.truncate_alert!
-        parsed_payload = Yajl::Parser.parse(notification.payload)
+        parsed_payload = MultiJson.decode(notification.payload)
         parsed_payload["aps"]["alert"].should == "Hello world"
       end
     end

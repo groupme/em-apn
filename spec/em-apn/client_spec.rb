@@ -107,7 +107,7 @@ describe EventMachine::APN::Client do
       end
 
       delivered[4].should == token
-      delivered[6].should == Yajl::Encoder.encode({:aps => {:alert => "Hello world"}})
+      delivered[6].should == MultiJson.encode({:aps => {:alert => "Hello world"}})
     end
 
     it "logs a message" do
@@ -171,7 +171,29 @@ describe EventMachine::APN::Client do
       EM.run_block do
         client = EM::APN::Client.new
         client.on_close { called = true }
-        client.connect # This should unbind immediately.
+        client.connect
+      end
+
+      called.should be_true
+    end
+  end
+
+  describe "#on_open" do
+    before do
+      @server = TCPServer.new(EventMachine::APN::Client::PORT)
+    end
+
+    after do
+      @server.close
+    end
+
+    it "sets a callback that is invoked when the connection is opened" do
+      called = false
+
+      EM.run_block do
+        client = EM::APN::Client.new
+        client.on_open { called = true }
+        client.connect
       end
 
       called.should be_true

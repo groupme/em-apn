@@ -3,7 +3,7 @@
 module EventMachine
   module APN
     class Notification
-      DATA_MAX_BYTES = 256
+      DATA_MAX_BYTES = 2048
       ALERT_KEY = "alert"
 
       class PayloadTooLarge < StandardError; end

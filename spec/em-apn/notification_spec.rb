@@ -89,7 +89,7 @@ describe EventMachine::APN::Notification do
 
   describe "#validate!" do
     it "raises PayloadTooLarge error if PAYLOAD_MAX_BYTES exceeded" do
-      notification = EM::APN::Notification.new(token, {:alert => "X" * 512})
+      notification = EM::APN::Notification.new(token, {:alert => "X" * 2050})
 
       lambda {
         notification.validate!
@@ -140,13 +140,13 @@ describe EventMachine::APN::Notification do
   describe "#truncate_alert!" do
     context "when the data size would exceed the APN limit" do
       it "truncates the alert" do
-        notification = EM::APN::Notification.new(token, { "alert" => "X" * 300 })
+        notification = EM::APN::Notification.new(token, { "alert" => "X" * 2050 })
         notification.data.size.should be > EM::APN::Notification::DATA_MAX_BYTES
 
         notification.truncate_alert!
         notification.data.size.should be <= EM::APN::Notification::DATA_MAX_BYTES
         parsed_payload = MultiJson.decode(notification.payload)
-        parsed_payload["aps"]["alert"].size.should == 191
+        parsed_payload["aps"]["alert"].size.should == 1983
       end
 
       it "truncates the alert properly when symbol payload keys are used" do
@@ -156,17 +156,17 @@ describe EventMachine::APN::Notification do
       end
 
       it "truncates the alert properly when it is JSON serialized into a different size" do
-        notification = EM::APN::Notification.new(token, { "alert" => '"' * 300 })
+        notification = EM::APN::Notification.new(token, { "alert" => '"' * 2050 })
         notification.truncate_alert!
         parsed_payload = MultiJson.decode(notification.payload)
-        parsed_payload["aps"]["alert"].size.should == 95
+        parsed_payload["aps"]["alert"].size.should == 991
       end
 
       it "truncates the alert properly for multi-byte Unicode characters" do
-        notification = EM::APN::Notification.new(token, { "alert" => [57352].pack('U') * 500 })
+        notification = EM::APN::Notification.new(token, { "alert" => [57352].pack('U') * 2050 })
         notification.truncate_alert!
         parsed_payload = MultiJson.decode(notification.payload)
-        parsed_payload["aps"]["alert"].size.should == 63
+        parsed_payload["aps"]["alert"].size.should == 661
       end
     end
 

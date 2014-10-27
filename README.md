@@ -65,7 +65,7 @@ callbacks can also be set directly to anything that responds to `#call`:
 
 ### Max Payload Size ###
 
-Apple enforces a limit of __256 bytes__ for the __entire payload__.
+Apple enforces a limit of __2048 bytes__ for the __entire payload__.
 
 If you attempt to deliver a notification that exceeds that limit, the library
 will raise an `EM::APN::Notification::PayloadTooLarge` exception.

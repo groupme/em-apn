@@ -5,6 +5,8 @@ require "multi_json"
 require "logger"
 require "extensions/hash"
 require "em-apn/client"
+require "em-apn/feedback_connection"
+require 'em-apn/failed_delivery_attempt'
 require "em-apn/connection"
 require "em-apn/notification"
 require "em-apn/log_message"

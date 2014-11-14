@@ -23,7 +23,7 @@ module EventMachine
       end
 
       def payload
-        MultiJson.encode(@custom.merge(:aps => @aps))
+        MultiJson.encode({aps: @aps}.merge(@custom))
       end
 
       # Documentation about this format is here:
@@ -31,9 +31,10 @@ module EventMachine
       def data
         identifier = @identifier || 0
         expiry     = @expiry || 0
-        size = [payload].pack("a*").size
-        data_array = [1, identifier, expiry, 32, token, size, payload]
-        data_array.pack("cNNnH*na*")
+        encoded_payload = payload
+        size = encoded_payload.bytesize
+        data_array = [1, identifier, expiry, 32, token, size, encoded_payload]
+        data_array.pack("cNNnH64na*")
       end
 
       def validate!

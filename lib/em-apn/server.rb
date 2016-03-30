@@ -10,8 +10,13 @@ module EventMachine
         start_tls(
           :cert_chain_file  => ENV["APN_CERT"],
           :private_key_file => ENV["APN_KEY"],
-          :verify_peer      => false
+          :verify_peer      => true
         )
+        @ssl_ok = true
+      end
+
+      def ssl_verify_peer (cert)
+        cert.index('MIIFgzCCBGugAwIBAgIIB6ApQW7VsXYwDQYJKoZIhvcNAQEFBQAwgZYxCzAJBgNV') != nil
       end
 
       def ssl_handshake_completed
@@ -23,6 +28,7 @@ module EventMachine
 
         # Try to extract the payload header
         headers = @data.unpack("cNNnH64n")
+
         return if headers.last.nil?
 
         # Try to grab the payload

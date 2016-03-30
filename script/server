@@ -4,13 +4,17 @@
 
 require "rubygems"
 require "bundler/setup"
-require "em-apn"
-require "em-apn/server"
+require "../lib/em-apn"
+require "../lib/em-apn/server"
 
-ENV["APN_KEY"]  = File.join(File.dirname(__FILE__), "..", "certs", "key.pem")
-ENV["APN_CERT"] = File.join(File.dirname(__FILE__), "..", "certs", "cert.pem")
+$eventmachine_library = :pure_ruby
+
+ENV["APN_KEY"]  = File.join(File.dirname(__FILE__), "..", "certs", "client2.pem")
+ENV["APN_CERT"] = File.join(File.dirname(__FILE__), "..", "certs", "client2.pem")
 
 EM::APN.logger.info("Starting push server")
+
+EM.error_handler { |e| puts e }
 
 EM.run do
   EM.start_server("127.0.0.1", 2195, EM::APN::Server)

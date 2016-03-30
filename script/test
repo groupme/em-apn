@@ -4,23 +4,6 @@ require "rubygems"
 require "bundler/setup"
 require "em-apn"
 
-
-certs = [
-  {
-      :key  => File.join(File.dirname(__FILE__), "..", "certs", "demo.pem"),
-      :cert => File.join(File.dirname(__FILE__), "..", "certs", "demo.pem"),
-  },
-  {
-      :key  => File.join(File.dirname(__FILE__), "..", "certs", "p3.key"),
-      :cert => File.join(File.dirname(__FILE__), "..", "certs", "chain3.pem"),
-  },{
-    :key => nil,
-    :cert => nil
-  }
-]
-
-
-
 TOKEN = "fe9515ba7556cfdcfca6530235c95dff682fac765838e749a201a7f6cf3792e6"
 
 def notify(client, queue)
@@ -37,16 +20,13 @@ def notify(client, queue)
   end
 end
 
-cert_id = 0
-
 key_1  = File.join(File.dirname(__FILE__), "..", "certs", "demo.pem")
 key_2  = File.join(File.dirname(__FILE__), "..", "certs", "staging.pem")
-
 
 ENV["APN_ENV"] = "dep" # production
 
 EM.run do
-  #client = EM::APN::Client.new(:key => key, :cert => key)
+
   c1 = EM::APN::Client.new(:gateway => "127.0.0.1", :key => key_1, :cert => key_1)
   c1.on_error do |response|
     puts response

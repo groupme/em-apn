@@ -25,16 +25,21 @@ module EventMachine
 
         @gateway = options[:gateway] || ENV["APN_GATEWAY"]
         @gateway ||= (ENV["APN_ENV"] == "production") ? PRODUCTION_GATEWAY : SANDBOX_GATEWAY
+
         @connection = nil
+      end
+
+      def flush_buffer
+        @buffer.each do |n|
+          send_notification n
+        end
+        @buffer = []
       end
 
       def connect
         @connection = EM.connect(gateway, port, Connection, self)
         @connection.on_ssl_negotiated do
-          @buffer.each do |n|
-            send_notification n
-          end
-          @buffer = []
+          flush_buffer
         end
       end
 
@@ -44,8 +49,7 @@ module EventMachine
         if !connection.ssl_negotiated?
           @buffer << notification
         else
-          log(notification)
-          connection.send_data(notification.data)
+          send_notification notification
         end
       end
 

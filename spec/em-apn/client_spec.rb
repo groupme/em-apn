@@ -103,6 +103,7 @@ describe EventMachine::APN::Client do
           delivered = data.unpack("cNNnH64na*")
           nil
         end
+        client.connection.stub(:ssl_negotiated?).and_return(true)
         client.deliver(notification)
       end
 
@@ -120,6 +121,10 @@ describe EventMachine::APN::Client do
 
       EM.run_block do
         client = EM::APN::Client.new
+        client.connect
+        client.connection.stub(:send_data)
+        client.connection.stub(:ssl_negotiated?).and_return(true)
+
         client.deliver(notification)
       end
 

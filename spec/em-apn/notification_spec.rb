@@ -3,6 +3,7 @@ require "spec_helper"
 
 describe EventMachine::APN::Notification do
   let(:token) { "fe9515ba7556cfdcfca6530235c95dff682fac765838e749a201a7f6cf3792e6" }
+  let(:staging_transport) { "com.skype.groupme.staging.development" }
 
   describe "#initialize" do
     it "raises an exception if the token is blank" do
@@ -20,6 +21,14 @@ describe EventMachine::APN::Notification do
     it "returns the token" do
       notification = EM::APN::Notification.new(token)
       notification.token.should == token
+      notification.transport.should == nil
+    end
+
+    it "returns the transport with prefixed token" do
+      staging_token = staging_transport + '/' + token
+      notification = EM::APN::Notification.new(staging_token)
+      notification.token.should == token
+      notification.transport.should == staging_transport
     end
   end
 

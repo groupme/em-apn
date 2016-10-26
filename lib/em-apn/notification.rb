@@ -7,14 +7,14 @@ module EventMachine
       ALERT_KEY = "alert"
 
       class PayloadTooLarge < StandardError; end
+      class InvalidPushToken < StandardError; end
 
-      attr_reader :token, :identifier
+      attr_reader :token, :identifier, :transport
       attr_accessor :expiry
 
       def initialize(token, aps = {}, custom = {}, options = {})
-        raise "Bad push token: #{token}" if token.nil? || (token.length != 64)
+        parse_token(token)
 
-        @token  = token
         @aps    = aps.stringify_keys!
         @custom = custom
         @expiry = options[:expiry]
@@ -24,6 +24,18 @@ module EventMachine
 
       def payload
         MultiJson.encode(@custom.merge(:aps => @aps))
+      end
+
+      def parse_token (token)
+        @transport = nil
+        # token can be either plain 64 char long apple push token or one prefixed by custom transport as "com.groupme.beta.staging/{original_apple_push_token}"
+        token.scan(/^([^\/]+)\/(.*)$/) { |trn, tok|
+          @transport = trn.strip
+          @token     = tok.strip
+        }
+        # no prefix detected, use original plain token
+        @token ||= token
+        raise InvalidPushToken.new("Invalid push token: #{@token}") if @token.nil? || (@token.length != 64)
       end
 
       # Documentation about this format is here:

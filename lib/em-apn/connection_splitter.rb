@@ -2,8 +2,8 @@ module EventMachine
   module APN
     class ConnectionSplitter
 
-      def initialize (*clients)
-        add_clients(*clients) if !clients.empty?
+      def initialize (clients)
+        add_clients(clients) if !clients.empty?
       end
 
       def get_client (key)
@@ -19,7 +19,7 @@ module EventMachine
         client.deliver(notification)
       end
 
-      def add_clients (*clients)
+      def add_clients (clients)
         @clients = clients
       end
 

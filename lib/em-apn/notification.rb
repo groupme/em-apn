@@ -13,29 +13,19 @@ module EventMachine
       attr_accessor :expiry
 
       def initialize(token, aps = {}, custom = {}, options = {})
-        parse_token(token)
+        raise "Bad push token: #{token}" if token.nil? || (token.length != 64)
 
+        @token  = token
         @aps    = aps.stringify_keys!
         @custom = custom
         @expiry = options[:expiry]
+        @transport = options.key?(:transport) ? options[:transport] : nil
 
         self.identifier = options[:identifier] if options[:identifier]
       end
 
       def payload
         MultiJson.encode(@custom.merge(:aps => @aps))
-      end
-
-      def parse_token (token)
-        @transport = nil
-        # token can be either plain 64 char long apple push token or one prefixed by custom transport as "com.groupme.beta.staging/{original_apple_push_token}"
-        token.scan(/^([^\/]+)\/(.*)$/) { |trn, tok|
-          @transport = trn.strip
-          @token     = tok.strip
-        }
-        # no prefix detected, use original plain token
-        @token ||= token
-        raise InvalidPushToken.new("Invalid push token: #{@token}") if @token.nil? || (@token.length != 64)
       end
 
       # Documentation about this format is here:

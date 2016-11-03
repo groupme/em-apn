@@ -15,20 +15,23 @@ describe EventMachine::APN::Notification do
       expect { EM::APN::Notification.new("0" * 63) }.to raise_error
       expect { EM::APN::Notification.new("0" * 65) }.to raise_error
     end
+
+    it "returns the transport when present in options" do
+      notification = EM::APN::Notification.new(token, {}, {}, {:transport => staging_transport} )
+      notification.token.should == token
+      notification.transport.should == staging_transport
+    end
+
+    it "returns the transport as nil when it isn't present in options" do
+      notification = EM::APN::Notification.new(token)
+      notification.transport.should == nil
+    end
   end
 
   describe "#token" do
     it "returns the token" do
       notification = EM::APN::Notification.new(token)
       notification.token.should == token
-      notification.transport.should == nil
-    end
-
-    it "returns the transport with prefixed token" do
-      staging_token = staging_transport + '/' + token
-      notification = EM::APN::Notification.new(staging_token)
-      notification.token.should == token
-      notification.transport.should == staging_transport
     end
   end
 

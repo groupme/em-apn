@@ -7,7 +7,6 @@ module EventMachine
       ALERT_KEY = "alert"
 
       class PayloadTooLarge < StandardError; end
-      class InvalidPushToken < StandardError; end
 
       attr_reader :token, :identifier, :transport
       attr_accessor :expiry

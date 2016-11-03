@@ -28,7 +28,6 @@ module EventMachine
 
         # Try to extract the payload header
         headers = @data.unpack("cNNnH64n")
-
         return if headers.last.nil?
 
         # Try to grab the payload

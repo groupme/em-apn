@@ -3,6 +3,7 @@ require "spec_helper"
 
 describe EventMachine::APN::Notification do
   let(:token) { "fe9515ba7556cfdcfca6530235c95dff682fac765838e749a201a7f6cf3792e6" }
+  let(:staging_transport) { "com.skype.groupme.staging.development" }
 
   describe "#initialize" do
     it "raises an exception if the token is blank" do
@@ -13,6 +14,17 @@ describe EventMachine::APN::Notification do
     it "raises an exception if the token is less than or greater than 32 bytes" do
       expect { EM::APN::Notification.new("0" * 63) }.to raise_error
       expect { EM::APN::Notification.new("0" * 65) }.to raise_error
+    end
+
+    it "returns the transport when present in options" do
+      notification = EM::APN::Notification.new(token, {}, {}, {:transport => staging_transport} )
+      notification.token.should == token
+      notification.transport.should == staging_transport
+    end
+
+    it "returns the transport as nil when it isn't present in options" do
+      notification = EM::APN::Notification.new(token)
+      notification.transport.should == nil
     end
   end
 

@@ -8,7 +8,7 @@ module EventMachine
 
       class PayloadTooLarge < StandardError; end
 
-      attr_reader :token, :identifier
+      attr_reader :token, :identifier, :transport
       attr_accessor :expiry
 
       def initialize(token, aps = {}, custom = {}, options = {})
@@ -18,6 +18,7 @@ module EventMachine
         @aps    = aps.stringify_keys!
         @custom = custom
         @expiry = options[:expiry]
+        @transport = options.key?(:transport) ? options[:transport] : nil
 
         self.identifier = options[:identifier] if options[:identifier]
       end

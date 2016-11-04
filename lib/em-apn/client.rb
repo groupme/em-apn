@@ -82,7 +82,7 @@ module EventMachine
       end
 
       def log(notification)
-        EM::APN.logger.info("TOKEN=#{notification.token} PAYLOAD=#{notification.payload.inspect}")
+        EM::APN.logger.info("TOKEN=#{notification.token} TRANSPORT=#{notification.transport} PAYLOAD=#{notification.payload.inspect}")
       end
     end
   end

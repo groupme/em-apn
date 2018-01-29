@@ -12,7 +12,7 @@ module EventMachine
       attr_accessor :expiry
 
       def initialize(token, aps = {}, custom = {}, options = {})
-        raise "Bad push token: #{token}" if token.nil? || (token.length != 64)
+        raise "Bad push token: #{token}" if token.nil?
 
         @token  = token
         @aps    = aps.stringify_keys!

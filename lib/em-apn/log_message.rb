@@ -6,7 +6,7 @@ module EventMachine
       end
 
       def log
-        EM::APN.logger.info(@response.to_s)
+        EM::APN.logger.debug(@response.to_s)
       end
     end
   end

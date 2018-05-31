@@ -42,7 +42,7 @@ module EventMachine
 
       def process(headers, payload)
         message = "APN RECV #{headers[4]} #{payload}"
-        EM::APN.logger.info(message)
+        EM::APN.logger.debug(message)
 
         args = MultiJson.decode(payload)
 
